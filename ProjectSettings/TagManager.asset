@@ -13,7 +13,7 @@ TagManager:
   - UI
   - 
   - 
-  - 
+  - Pot
   - 
   - 
   - 
@@ -40,4 +40,10 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Shrimp
+    uniqueID: 656241123
+    locked: 0
+  - name: Pot
+    uniqueID: 830008427
     locked: 0

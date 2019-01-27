@@ -24,6 +24,8 @@ public class PlayerController : MonoBehaviour {
     private float _expectedMax = 60;
     [SerializeField]
     private float _maxThrowYPos;
+    [SerializeField]
+    private float _distanceToCheckColl = 3f;
 
     [Header("Component References")]
     [SerializeField]
@@ -35,10 +37,16 @@ public class PlayerController : MonoBehaviour {
     [SerializeField]
     DebugValueController _debugValueController;
 
+    private GameController _gameController;
     private SwipeController _swipeController;
 
     [HideInInspector]
     public bool isControllerActive = true;
+
+    public void Init(GameController gameController) 
+    {
+        _gameController = gameController;
+    }
 
 	// Use this for initialization
 	void Start () 
@@ -59,7 +67,7 @@ public class PlayerController : MonoBehaviour {
         _swipeController.Init(_expectedMin, _expectedMax);
         _swipeController.Init(_expectedMin, _expectedMax);
         _boomerangMovement.boomerangPath.Init(_maxScale, _minScale, _maxThrowYPos);
-        _boomerangMovement.Init(_boomerangMovementSpeed);
+        _boomerangMovement.Init(_boomerangMovementSpeed, _distanceToCheckColl);
     }
 
     private void InitDebugController()

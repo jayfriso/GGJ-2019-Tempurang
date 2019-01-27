@@ -10,8 +10,11 @@ public class BoomerangMovement : MonoBehaviour
     public BoomerangPath boomerangPath { get { return _boomerangPath; } }
 
     [SerializeField]
+    private ShrimpAnimator _shrimpAnimator;
+
+    [SerializeField]
     private Transform _movementTransform;
-    
+
     private int currentIndex = 0;
     private SpeedWayPoint currentWayPoint 
     { 
@@ -37,20 +40,28 @@ public class BoomerangMovement : MonoBehaviour
     private bool _isMoving = false;
     private float _speed = 4f;
     private float _currentSpeed = 0f;
+    private float _distanceToCheckForCollision = 3f;
 
     // Use this for initialization
     void Start()
     {
         _currentSpeed = _boomerangPath.pathPoints[currentIndex].speedModifier * _speed;
+        _shrimpAnimator.onCollision += HandleShrimpCollision;
     }
 
-    public void Init(float boomerangSpeed)
+    public void Init(float boomerangSpeed, float distanceToCheckForCollision)
     {
         _speed = boomerangSpeed;
+        _distanceToCheckForCollision = distanceToCheckForCollision;
+    }
+
+    private void HandleShrimpCollision()
+    {
+        _isMoving = false;
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         if (!_isMoving)
             return;
@@ -65,22 +76,34 @@ public class BoomerangMovement : MonoBehaviour
     {
         currentIndex = 0;
         _isMoving = true;
+        transform.position = currentWayPoint.position;
+        _shrimpAnimator.InitThrow();
     }
 
     private void Walk()
     {   
         float progress = (_movementTransform.position - currentWayPoint.position).magnitude / (targetWayPoint.position - currentWayPoint.position).magnitude;
         _currentSpeed = _speed * Mathf.Lerp(currentWayPoint.speedModifier, targetWayPoint.speedModifier, progress);
+        
+        Rigidbody2D rigidBody2D = _movementTransform.GetComponent<Rigidbody2D>();
 
-        // move towards the target
-        _movementTransform.position = Vector3.MoveTowards(_movementTransform.position, targetWayPoint.position, _currentSpeed * Time.deltaTime);
-
-        if (_movementTransform.position == targetWayPoint.position)
+        RaycastHit2D hit = Physics2D.Raycast(_movementTransform.position, targetWayPoint.position - _movementTransform.position, _distanceToCheckForCollision, LayerMask.GetMask("Pot"));
+        Debug.DrawRay(_movementTransform.position, targetWayPoint.position - _movementTransform.position);
+        if (hit.collider != null)
         {
-            currentIndex++;
-            if (currentIndex >= _boomerangPath.pathPoints.Length)
+            rigidBody2D.AddForce((targetWayPoint.position - _movementTransform.position).normalized * _currentSpeed * 25f);
+            _isMoving = false;
+        }
+        else
+        {
+            rigidBody2D.MovePosition(Vector3.MoveTowards(_movementTransform.position, targetWayPoint.position, _currentSpeed * Time.fixedDeltaTime));
+            if (_movementTransform.position == targetWayPoint.position)
             {
-                _isMoving = false;
+                currentIndex++;
+                if (currentIndex >= _boomerangPath.pathPoints.Length)
+                {
+                    _isMoving = false;
+                }
             }
         }
     }
