@@ -12,22 +12,18 @@ public class BoomerangPath : MonoBehaviour {
 
     private Vector3 _pathDirection;
 
-    public void Awake()
-    {
-        _pathDirection = pathPoints[1].position - pathPoints[0].position;
-    }
-
     public void Init(float maxScale, float minScale, float maxThrowYPos)
     {
         _maxScale = maxScale;
         _minScale = minScale;
         _maxThrowYPos = maxThrowYPos;
+        _pathDirection = pathPoints[1].position - pathPoints[0].position;
     }
 
     public void TranformForThrow(Vector2 startPoint, Vector2 endPoint, float throwStrength)
     {
-        // Reset scale to start
-        transform.localScale = Vector2.one;
+        float yPos = Mathf.Clamp(startPoint.y, -10000, _maxThrowYPos);
+        transform.position = new Vector2(startPoint.x, yPos);
 
         Vector2 directionVector = endPoint - startPoint;
         // First scale the y to match the shape
@@ -39,8 +35,5 @@ public class BoomerangPath : MonoBehaviour {
         float boomerangXScale = directionVector.x / scaledPath.x;
 
         transform.localScale = new Vector2(boomerangXScale, yScale);
-
-        float yPos = Mathf.Clamp(startPoint.y, -10000, _maxThrowYPos);
-        transform.position = new Vector2(startPoint.x, yPos);
     }
 }

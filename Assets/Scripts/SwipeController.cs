@@ -12,6 +12,8 @@ public class SwipeController : MonoBehaviour
 
     private float _expectedMin;
     private float _expectedMax;
+    
+    public bool isSwipeControllerActive = false;
 
     public void Init(float expectedMin, float expectedMax)
     {
@@ -19,8 +21,14 @@ public class SwipeController : MonoBehaviour
         _expectedMin = expectedMin;
     }
 
+    public void WaitThenEnable() { StartCoroutine(WaitThenEnableCoroutine()); }
+    private IEnumerator WaitThenEnableCoroutine() { yield return new WaitForSeconds(0.2f); isSwipeControllerActive = true; }
+
     void Update()
     {
+        if (!isSwipeControllerActive)
+            return;
+
         if (Input.GetMouseButtonDown(0))
         {
             //Store initial values

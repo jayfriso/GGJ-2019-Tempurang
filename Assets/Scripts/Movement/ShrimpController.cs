@@ -1,19 +1,25 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-public class BoomerangMovement : MonoBehaviour
+public class ShrimpController : MonoBehaviour
 {
+    public Action onSuccess;
+
     // put the points from unity interface
     [SerializeField]
     private BoomerangPath _boomerangPath;
     public BoomerangPath boomerangPath { get { return _boomerangPath; } }
 
     [SerializeField]
-    private ShrimpAnimator _shrimpAnimator;
+    private ShrimpCollider _shrimpCollider;
 
     [SerializeField]
     private Transform _movementTransform;
+
+    [SerializeField]
+    private float _spinSpeed;
 
     private int currentIndex = 0;
     private SpeedWayPoint currentWayPoint 
@@ -37,6 +43,7 @@ public class BoomerangMovement : MonoBehaviour
         }
     }
 
+    private Animator _animator;
     private bool _isMoving = false;
     private float _speed = 4f;
     private float _currentSpeed = 0f;
@@ -46,22 +53,40 @@ public class BoomerangMovement : MonoBehaviour
     void Start()
     {
         _currentSpeed = _boomerangPath.pathPoints[currentIndex].speedModifier * _speed;
-        _shrimpAnimator.onCollision += HandleShrimpCollision;
+        _shrimpCollider.onDeathCountdown += HandleShrimpDeathCountdown;
+        _shrimpCollider.onDeath += HandleShrimpDeath;
+        _shrimpCollider.onSuccess += HandleShrimpSuccess;
+        _animator = GetComponent<Animator>();
     }
 
     public void Init(float boomerangSpeed, float distanceToCheckForCollision)
     {
         _speed = boomerangSpeed;
         _distanceToCheckForCollision = distanceToCheckForCollision;
+        _shrimpCollider.Init();
     }
 
-    private void HandleShrimpCollision()
+    private void HandleShrimpDeathCountdown()
     {
         _isMoving = false;
     }
+    private void HandleShrimpDeath()
+    {
+        Destroy(this.gameObject);
+    }
+
+    private void HandleShrimpSuccess()
+    {
+        _isMoving = false;
+        _animator.SetTrigger("Fry");
+        if (onSuccess != null)
+            onSuccess.Invoke();
+    }
+
+    public void HandleFryFinish() { Destroy(this.gameObject); }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
         if (!_isMoving)
             return;
@@ -72,12 +97,12 @@ public class BoomerangMovement : MonoBehaviour
         }
     }
 
-    public void TriggerPathWalk() 
+    public void TriggerThrow() 
     {
         currentIndex = 0;
         _isMoving = true;
-        transform.position = currentWayPoint.position;
-        _shrimpAnimator.InitThrow();
+        _movementTransform.position = currentWayPoint.position;
+        _shrimpCollider.InitThrow();
     }
 
     private void Walk()
@@ -96,13 +121,16 @@ public class BoomerangMovement : MonoBehaviour
         }
         else
         {
-            rigidBody2D.MovePosition(Vector3.MoveTowards(_movementTransform.position, targetWayPoint.position, _currentSpeed * Time.fixedDeltaTime));
+            _movementTransform.position = Vector3.MoveTowards(_movementTransform.position, targetWayPoint.position, _currentSpeed * Time.deltaTime);
+            _movementTransform.Rotate(new Vector3(0, 0, _spinSpeed * Time.deltaTime));
+            
             if (_movementTransform.position == targetWayPoint.position)
             {
                 currentIndex++;
                 if (currentIndex >= _boomerangPath.pathPoints.Length)
                 {
                     _isMoving = false;
+                    _shrimpCollider.StartDeathCountdown();
                 }
             }
         }

@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: d88c08f54b62f634eb9a5a3a18642e2c
+timeCreated: 1548619690
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Ageng Sans
+  fontNames:
+  - Ageng Sans
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

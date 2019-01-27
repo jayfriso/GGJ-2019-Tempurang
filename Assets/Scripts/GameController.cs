@@ -7,6 +7,7 @@ public class GameController : MonoBehaviour
     public Action onGameStart;
     public Action onGameEnd;
     public Action<int> onPointUpdate;
+    public Action<float> onTimeUpdate;
 
     [Header("Game Config")]
     [SerializeField]
@@ -30,23 +31,37 @@ public class GameController : MonoBehaviour
 
     private void Init()
     {
-        _playerController.Init(this);
+        _uiController.Init(this);
+        _playerController.Init(this, _uiController);
     }
 
     // Update is called once per frame
     void Update()
     {
-        currentTime += Time.deltaTime;
-        if (currentTime >= _gameTime)
+        if (_isGameRunning)
         {
-            EndGame();
+            currentTime += Time.deltaTime;
+            onTimeUpdate(_gameTime - currentTime);
+            if (currentTime >= _gameTime)
+            {
+                EndGame();
+            }
         }
+    }
+
+    public void IncremementPoints() 
+    { 
+        _points++;
+        if (onPointUpdate != null)
+            onPointUpdate.Invoke(_points);
     }
 
     public void StartGame()
     {
         _isGameRunning = true;
         currentTime = 0f;
+        _isGameRunning = true;
+        _playerController.StartGame();
 
         if (onGameStart != null)
             onGameStart.Invoke();

@@ -29,13 +29,11 @@ public class PlayerController : MonoBehaviour {
 
     [Header("Component References")]
     [SerializeField]
-    private BoomerangMovement _boomerangMovement;
+    private GameObject _shripPrefab;
     [SerializeField]
-    private Transform _basePoint;
+    private GameObject _shrimpContainer;
     [SerializeField]
     private Camera _camera;
-    [SerializeField]
-    DebugValueController _debugValueController;
 
     private GameController _gameController;
     private SwipeController _swipeController;
@@ -43,50 +41,55 @@ public class PlayerController : MonoBehaviour {
     [HideInInspector]
     public bool isControllerActive = true;
 
-    public void Init(GameController gameController) 
+
+    public void Init(GameController gameController, UIController uiController) 
     {
         _gameController = gameController;
-    }
-
-	// Use this for initialization
-	void Start () 
-    {
+        InitDebugController(uiController.debugValueController);
         _swipeController = GetComponent<SwipeController>();
-
         InitValues();
-        InitDebugController();
-
         _swipeController.onSwipe += HandleSwipe;
-        _debugValueController.onToggled += (bool toggled) => { isControllerActive = !toggled; };
-
-        isControllerActive = true;
+        isControllerActive = false;
     }
 
     private void InitValues()
     {
         _swipeController.Init(_expectedMin, _expectedMax);
         _swipeController.Init(_expectedMin, _expectedMax);
-        _boomerangMovement.boomerangPath.Init(_maxScale, _minScale, _maxThrowYPos);
-        _boomerangMovement.Init(_boomerangMovementSpeed, _distanceToCheckColl);
     }
 
-    private void InitDebugController()
+    private void InitDebugController(DebugValueController debugValueController)
     {
-        _debugValueController.AddNewDebugValue("Boomerang Movement Speed", _boomerangMovementSpeed, (float newValue) => { this._boomerangMovementSpeed = newValue; InitValues(); });
+        debugValueController.onToggled += (bool toggled) => { isControllerActive = !toggled; };
 
-        _debugValueController.AddNewDebugValue("Min Scale", _minScale, (float newValue) => { this._minScale = newValue; InitValues(); });
-        _debugValueController.AddNewDebugValue("Max Scale", _maxScale, (float newValue) => { this._maxScale = newValue; InitValues(); });
+        debugValueController.AddNewDebugValue("Boomerang Movement Speed", _boomerangMovementSpeed, (float newValue) => { this._boomerangMovementSpeed = newValue; InitValues(); });
 
-        _debugValueController.AddNewDebugValue("Expected Min", _expectedMin, (float newValue) => { this._expectedMin = newValue; InitValues(); });
-        _debugValueController.AddNewDebugValue("Expected Max", _expectedMax, (float newValue) => { this._expectedMax = newValue; InitValues(); });
+        debugValueController.AddNewDebugValue("Min Scale", _minScale, (float newValue) => { this._minScale = newValue; InitValues(); });
+        debugValueController.AddNewDebugValue("Max Scale", _maxScale, (float newValue) => { this._maxScale = newValue; InitValues(); });
+
+        debugValueController.AddNewDebugValue("Expected Min", _expectedMin, (float newValue) => { this._expectedMin = newValue; InitValues(); });
+        debugValueController.AddNewDebugValue("Expected Max", _expectedMax, (float newValue) => { this._expectedMax = newValue; InitValues(); });
+    }
+    public void StartGame()
+    {
+        isControllerActive = true;
+        _swipeController.WaitThenEnable();
     }
 
     private void HandleSwipe(float swipeStrength, Vector3 startPos, Vector3 endPos) 
     {
         if (!isControllerActive)
             return;
+        ShrimpController shrimpController = Instantiate(_shripPrefab, Vector3.zero, Quaternion.identity, _shrimpContainer.transform).GetComponent<ShrimpController>();
+        shrimpController.onSuccess += HandleShrimpSuccess;
+        shrimpController.boomerangPath.Init(_maxScale, _minScale, _maxThrowYPos);
+        shrimpController.Init(_boomerangMovementSpeed, _distanceToCheckColl);
+        shrimpController.boomerangPath.TranformForThrow((Vector2)startPos, (Vector2)endPos, swipeStrength);
+        shrimpController.TriggerThrow();
+    }
 
-        _boomerangMovement.boomerangPath.TranformForThrow((Vector2)startPos, (Vector2)endPos, swipeStrength);
-        _boomerangMovement.TriggerPathWalk();
+    private void HandleShrimpSuccess()
+    {
+        _gameController.IncremementPoints();
     }
 }

@@ -3,5 +3,11 @@ using System.Collections;
 
 public class Pot : MonoBehaviour
 {
-    private float _angleDiffWindow = 45;
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        if(col.CompareTag("Shrimp"))
+        {
+            col.GetComponent<ShrimpCollider>().TriggerSuccess();
+        }
+    }
 }
