@@ -8,14 +8,20 @@ public class BoomerangPath : MonoBehaviour {
 
     private float _maxScale;
     private float _minScale;
+    private float _maxThrowYPos;
 
     private Vector3 _pathDirection;
 
-    public void Init(float maxScale, float minScale)
+    public void Awake()
+    {
+        _pathDirection = pathPoints[1].position - pathPoints[0].position;
+    }
+
+    public void Init(float maxScale, float minScale, float maxThrowYPos)
     {
         _maxScale = maxScale;
         _minScale = minScale;
-        _pathDirection = pathPoints[1].position - pathPoints[0].position;
+        _maxThrowYPos = maxThrowYPos;
     }
 
     public void TranformForThrow(Vector2 startPoint, Vector2 endPoint, float throwStrength)
@@ -33,5 +39,8 @@ public class BoomerangPath : MonoBehaviour {
         float boomerangXScale = directionVector.x / scaledPath.x;
 
         transform.localScale = new Vector2(boomerangXScale, yScale);
+
+        float yPos = Mathf.Clamp(startPoint.y, -10000, _maxThrowYPos);
+        transform.position = new Vector2(startPoint.x, yPos);
     }
 }
